@@ -42,7 +42,8 @@ from UI.SettingsWindow import SettingsWindow
 from UI.Widgets.CustomTextBox import CustomTextBox
 from UI.LoadingWindow import LoadingWindow
 from Model import Model, ModelManager
-from utils.file_utils import get_file_path, get_resource_path
+from utils.file_utils import get_resource_path
+from utils.icon_utils import set_logo
 
 # GUI Setup
 root = tk.Tk()
@@ -688,7 +689,7 @@ def generate_note(formatted_message):
 def show_edit_transcription_popup(formatted_message):
     popup = tk.Toplevel(root)
     popup.title("Scrub PHI Prior to GPT")
-    popup.iconbitmap(get_file_path('assets','logo.ico'))
+    set_logo(popup)
     text_area = scrolledtext.ScrolledText(popup, height=20, width=80)
     text_area.pack(padx=10, pady=10)
 
