@@ -140,14 +140,14 @@ def toggle_pause():
     if is_paused:
         DEFAULT_PAUSE_BUTTON_COLOUR = pause_button.cget('background')
         if current_view == "full":
-            pause_button.config(text="Resume", bg="red")
+            pause_button.config(text="Resume", bg="red", highlightbackground="red")
         elif current_view == "minimal":
-            pause_button.config(text="▶️", bg="red")
+            pause_button.config(text="▶️", bg="red", highlightbackground="red")
     else:
         if current_view == "full":
-            pause_button.config(text="Pause", bg=DEFAULT_PAUSE_BUTTON_COLOUR)
+            pause_button.config(text="Pause", bg=DEFAULT_PAUSE_BUTTON_COLOUR, highlightbackground=DEFAULT_PAUSE_BUTTON_COLOUR)
         elif current_view == "minimal":
-            pause_button.config(text="⏸️", bg=DEFAULT_PAUSE_BUTTON_COLOUR)
+            pause_button.config(text="⏸️", bg=DEFAULT_PAUSE_BUTTON_COLOUR, highlightbackground=DEFAULT_PAUSE_BUTTON_COLOUR)
     
 
 def record_audio():
@@ -298,9 +298,9 @@ def toggle_recording():
         DEFAULT_BUTTON_COLOUR= mic_button.cget('background')
 
         if current_view == "full":
-            mic_button.config(bg="red", text="Stop\nRecording")
+            mic_button.config(highlightbackground="red", bg="red", text="Stop\nRecording")
         elif current_view == "minimal":
-            mic_button.config(bg="red", text="⏹️")
+            mic_button.config(highlightbackground="red",bg="red", text="⏹️")
         
         start_flashing()
     else:
@@ -321,9 +321,9 @@ def toggle_recording():
         save_audio()
 
         if current_view == "full":
-            mic_button.config(bg=DEFAULT_BUTTON_COLOUR, text="Start\nRecording")
+            mic_button.config(bg=DEFAULT_BUTTON_COLOUR, highlightbackground=DEFAULT_BUTTON_COLOUR, text="Start\nRecording")
         elif current_view == "minimal":
-            mic_button.config(bg=DEFAULT_BUTTON_COLOUR, text="🎤")
+            mic_button.config(bg=DEFAULT_BUTTON_COLOUR, highlightbackground=DEFAULT_BUTTON_COLOUR, text="🎤")
 
 def clear_all_text_fields():
     user_input.scrolled_text.configure(state='normal')
@@ -813,9 +813,11 @@ def set_full_view():
 
     # Reconfigure button styles and text
     mic_button.config(bg="red" if is_recording else DEFAULT_BUTTON_COLOUR,
-                      text="Stop\nRecording" if is_recording else "Start\nRecording")
+                      text="Stop\nRecording" if is_recording else "Start\nRecording",
+                      highlightbackground="red" if is_recording else DEFAULT_BUTTON_COLOUR)
     pause_button.config(bg="red" if is_paused else DEFAULT_BUTTON_COLOUR,
-                        text="Resume" if is_paused else "Pause")
+                        text="Resume" if is_paused else "Pause",
+                        highlightbackground="red" if is_recording else DEFAULT_BUTTON_COLOUR)
 
     # Unbind transparency events and reset window properties
     root.unbind('<Enter>')
