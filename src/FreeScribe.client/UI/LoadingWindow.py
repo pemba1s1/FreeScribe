@@ -127,5 +127,8 @@ class LoadingWindow:
         >>> popup.destroy()  # Properly clean up and close the window
         """
         if self.popup:
-            self.progress.stop()
-            self.popup.destroy()
+            if self.progress.winfo_exists():
+                self.progress.stop()
+
+            if self.popup.winfo_exists():
+                self.popup.destroy()
