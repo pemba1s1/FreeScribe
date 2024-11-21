@@ -90,9 +90,6 @@ class LoadingWindow:
             # Disable closing of the popup manually
             self.popup.protocol("WM_DELETE_WINDOW", lambda: None)
         except Exception:
-            # Enable the window on exception
-            # if parent:
-            #     parent.wm_attributes('-disabled', False)
             raise
 
     def _handle_cancel(self):
@@ -130,8 +127,5 @@ class LoadingWindow:
         >>> popup.destroy()  # Properly clean up and close the window
         """
         if self.popup:
-            # Enable the parent window
-            # if self.parent:
-            #     self.parent.wm_attributes('-disabled', False)
             self.progress.stop()
             self.popup.destroy()

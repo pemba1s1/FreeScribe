@@ -83,7 +83,6 @@ class SettingsWindowUI:
         self.settings_window.minsize(600, 500)    # Set minimum window size
         self.settings_window.resizable(True, True)
         self.settings_window.grab_set()
-        # self.settings_window.iconbitmap(get_logo_path())
         set_logo(self.settings_window)
 
         self.main_frame = tk.Frame(self.settings_window)

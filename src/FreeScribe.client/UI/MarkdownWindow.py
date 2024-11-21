@@ -3,7 +3,6 @@ import markdown as md
 import tkinter as tk
 from tkhtmlview import HTMLLabel
 from utils.icon_utils import set_logo
-# from utils.file_utils import get_logo_path
 
 """
 A class to create a window displaying rendered Markdown content.
@@ -37,7 +36,6 @@ class MarkdownWindow:
         self.window.title(title)
         self.window.transient(parent)
         self.window.grab_set()
-        # self.window.iconbitmap(get_logo_path())
         set_logo(self.window)
 
         try:
