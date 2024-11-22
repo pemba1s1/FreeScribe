@@ -76,7 +76,13 @@ class AudioMeter(tk.Frame):
             return
 
         self.destroyed = True
-        self.running = False
+
+
+        # Then wait for thread
+        if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
+            while self.monitoring_thread.is_alive():
+                print("Waiting for monitoring thread to join...")
+                self.monitoring_thread.join(timeout=1.0)
         
         # Stop audio first
         if hasattr(self, 'stream') and self.stream:
@@ -201,6 +207,8 @@ class AudioMeter(tk.Frame):
                 input=True,
                 frames_per_buffer=self.CHUNK,
             )
+            
+            print("Audio monitoring started.")
             self.monitoring_thread = Thread(target=self.update_meter)
             self.monitoring_thread.start()
         else:
@@ -226,8 +234,12 @@ class AudioMeter(tk.Frame):
                 if not self.destroyed:
                     self.master.after(0, self.update_meter_display, level)
             except Exception as e:
+                self.running = False
                 print(f"Error in audio monitoring: {e}")
                 break
+        
+        self.running = False
+        print("Audio monitoring thread stopped.")
     
     def update_meter_display(self, level):
         """
