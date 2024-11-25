@@ -14,6 +14,7 @@ and Research Students - Software Developer Alex Simko, Pemba Sherpa (F24), and N
 """
 
 import struct
+import threading
 import tkinter as tk
 from tkinter import ttk
 import pyaudio
@@ -56,6 +57,7 @@ class AudioMeter(tk.Frame):
         self.running = False
         self.threshold = threshold
         self.destroyed = False  # Add flag to track widget destruction
+        self.stop_monitoring = threading.Event()
         self.setup_audio()
         self.create_widgets()
         
@@ -76,13 +78,12 @@ class AudioMeter(tk.Frame):
             return
 
         self.destroyed = True
-
+        self.stop_monitoring.set()
 
         # Stop monitoring thread first
         if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
-            while self.monitoring_thread.is_alive():
-                print("Waiting for monitoring thread to join...")
-                self.monitoring_thread.join(timeout=1.0)
+            print("Waiting for monitoring thread to join...")
+            self.monitoring_thread.join(timeout=1.0)
         
         # Then stop audio stream and terminate PyAudio
         if hasattr(self, 'stream') and self.stream:
@@ -90,10 +91,6 @@ class AudioMeter(tk.Frame):
             self.stream.close()
         if hasattr(self, 'p') and self.p:
             self.p.terminate()
-            
-        # Then wait for thread
-        if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
-            self.monitoring_thread.join(timeout=1.0)
 
     def destroy(self):
         """
@@ -223,7 +220,7 @@ class AudioMeter(tk.Frame):
         This method reads audio data from the stream, calculates the maximum
         audio level, and updates the meter display on the main thread.
         """
-        while self.running and not self.destroyed:  # Check destroyed flag
+        while not self.stop_monitoring.is_set():  # Check destroyed flag
             try:
                 data = self.stream.read(self.CHUNK, exception_on_overflow=False)
                 audio_data = struct.unpack(f'{self.CHUNK}h', data)
