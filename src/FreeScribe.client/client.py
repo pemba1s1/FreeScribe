@@ -155,8 +155,7 @@ def toggle_pause():
 
 def record_audio():
     global is_paused, frames, audio_queue
-    input_device_index = 0 if sys.platform == "darwin" else 1
-    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=input_device_index)
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
     current_chunk = []
     silent_duration = 0
     record_duration = 0
