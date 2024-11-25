@@ -102,6 +102,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install PortAudio
+        run: |
+          brew install portaudio
+
       - name: Install requirements
         run: |
           pip install -r client_requirements.txt
