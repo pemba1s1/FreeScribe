@@ -4,6 +4,7 @@ import UI.MainWindow as mw
 from UI.SettingsWindowUI import SettingsWindowUI
 from UI.MarkdownWindow import MarkdownWindow
 from utils.file_utils import get_file_path
+from utils.icon_utils import set_logo
 
 class MainWindowUI:
     """
@@ -27,7 +28,7 @@ class MainWindowUI:
         self.logic = mw.MainWindow(self.app_settings)  # Logic to control the container behavior
         self.scribe_template = None
         self.setting_window = SettingsWindowUI(self.app_settings, self)  # Settings window
-        self.root.iconbitmap(get_file_path('assets','logo.ico'))
+        set_logo(self.root)
 
     def load_main_window(self):
         """
@@ -149,7 +150,9 @@ class MainWindowUI:
 
     def _create_settings_menu(self):
         # Add Settings menu
-        self.menu_bar.add_command(label="Settings", command=self.setting_window.open_settings_window)
+        setting_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="Settings", menu=setting_menu)
+        setting_menu.add_command(label="Settings", command=self.setting_window.open_settings_window)
 
     def _create_help_menu(self):
         # Add Help menu
