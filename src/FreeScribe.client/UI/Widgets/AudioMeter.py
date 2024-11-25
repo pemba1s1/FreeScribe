@@ -78,13 +78,13 @@ class AudioMeter(tk.Frame):
         self.destroyed = True
 
 
-        # Then wait for thread
+        # Stop monitoring thread first
         if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
             while self.monitoring_thread.is_alive():
                 print("Waiting for monitoring thread to join...")
                 self.monitoring_thread.join(timeout=1.0)
         
-        # Stop audio first
+        # Then stop audio stream and terminate PyAudio
         if hasattr(self, 'stream') and self.stream:
             self.stream.stop_stream()
             self.stream.close()
