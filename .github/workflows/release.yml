@@ -105,6 +105,10 @@ jobs:
         run: |
           pip install -r client_requirements.txt
 
+      - name: Install ffmpeg
+        run: |
+          brew install ffmpeg
+
       - name: Build macOS app
         run: |
           ./build-mac.sh
