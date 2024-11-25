@@ -86,3 +86,68 @@ jobs:
           asset_path: dist/FreeScribeInstaller.exe
           asset_name: FreeScribeInstaller_windows.exe
           asset_content_type: application/octet-stream
+
+  
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.12.4"
+
+      - name: Install requirements
+        run: |
+          pip install -r client_requirements.txt
+
+      - name: Build macOS app
+        run: |
+          ./build-mac.sh
+      
+      - name: Build PKG installer
+        run: |
+          ./build-pkg.sh
+
+      - name: Check if alpha release
+        id: check_alpha
+        run: |
+          if ("${{ github.ref }}" -like "*.alpha") {
+            echo "is_alpha=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "is_alpha=false" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+  
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            For full changelog, see [the commits since last release](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.changelog.last_tag }}...${{ github.ref }})
+          draft: false
+          prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
+
+      - name: Upload Installer
+        id: upload-installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: dist/FreeScribeInstaller.pkg
+          asset_name: FreeScribeInstaller.pkg
+          asset_content_type: application/octet-stream
+  
+          
