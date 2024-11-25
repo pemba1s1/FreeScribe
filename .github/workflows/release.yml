@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-windows:
+    if: false == true
     runs-on: windows-latest
     permissions:
       contents: write
