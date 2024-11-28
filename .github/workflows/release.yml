@@ -109,7 +109,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install -r client_requirements.txt
+          arch -x86_64 pip install -r client_requirements.txt
 
       - name: Install ffmpeg
         run: |
