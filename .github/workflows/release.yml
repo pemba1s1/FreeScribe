@@ -132,22 +132,6 @@ jobs:
             echo "is_alpha=false" >> $env:GITHUB_OUTPUT
           }
         shell: pwsh
-  
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            ## What's Changed
-            ${{ steps.changelog.outputs.CHANGELOG }}
-
-            For full changelog, see [the commits since last release](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.changelog.last_tag }}...${{ github.ref }})
-          draft: false
-          prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
 
       - name: Upload Installer
         id: upload-installer
@@ -155,6 +139,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          name: FreeScribeInstaller_macos.pkg
+          tag_name: ${{ github.ref }}
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            For full changelog, see [the commits since last release](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.changelog.last_tag }}...${{ github.ref }})
+          draft: false
+          prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
           files: dist/FreeScribeInstaller.pkg
   
           
