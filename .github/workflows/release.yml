@@ -151,13 +151,10 @@ jobs:
 
       - name: Upload Installer
         id: upload-installer
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: dist/FreeScribeInstaller.pkg
-          asset_name: FreeScribeInstaller.pkg
-          asset_content_type: application/octet-stream
+          files: dist/FreeScribeInstaller.pkg
   
           
