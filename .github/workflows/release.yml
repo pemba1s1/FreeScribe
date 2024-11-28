@@ -101,7 +101,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          architecture: "x64"
 
       - name: Install PortAudio
         run: |
@@ -109,7 +108,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          arch -x86_64 pip install -r client_requirements.txt
+          pip install -r client_requirements.txt
 
       - name: Install ffmpeg
         run: |
@@ -151,10 +150,13 @@ jobs:
 
       - name: Upload Installer
         id: upload-installer
-        uses: softprops/action-gh-release@v2
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: dist/FreeScribeInstaller.pkg
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: dist/FreeScribeInstaller.pkg
+          asset_name: FreeScribeInstaller.pkg
+          asset_content_type: application/octet-stream
   
           
