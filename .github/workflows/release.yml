@@ -60,16 +60,19 @@ jobs:
           }
         shell: pwsh
 
+      - name: Rename Installer
+        run: |
+          mv dist/FreeScribeInstaller.exe dist/FreeScribeInstaller_windows.exe
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: FreeScribeInstaller_windows.exe
-          path: dist/FreeScribeInstaller.exe
+          path: dist/FreeScribeInstaller_windows.exe
 
   
   build-macos-intel:
-    runs-on: macos-12
+    runs-on: macos-13
     permissions:
       contents: write
     steps:
@@ -89,6 +92,10 @@ jobs:
         run: |
           pip install -r client_requirements.txt
 
+      - name: llama_cpp with Metal
+        run: |
+          pip uninstall -y llama-cpp-python
+          pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
       - name: Install ffmpeg
         run: |
           brew install ffmpeg
@@ -132,6 +139,11 @@ jobs:
         run: |
           pip install -r client_requirements.txt
 
+      - name: llama_cpp with Metal
+        run: |
+          pip uninstall -y llama-cpp-python
+          pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
+          
       - name: Install ffmpeg
         run: |
           brew install ffmpeg
