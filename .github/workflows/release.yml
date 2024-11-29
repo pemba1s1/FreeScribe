@@ -8,7 +8,6 @@ on:
 
 jobs:
   build-windows:
-    if: false == true
     runs-on: windows-latest
     permissions:
       contents: write
@@ -63,7 +62,7 @@ jobs:
 
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: FreeScribeInstaller_windows.exe
           path: dist/FreeScribeInstaller.exe
@@ -107,7 +106,7 @@ jobs:
           mv dist/FreeScribeInstaller.pkg dist/FreeScribeInstaller_x86_64.pkg
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: FreeScribeInstaller_x86_64.pkg
           path: dist/FreeScribeInstaller_x86_64.pkg
@@ -150,7 +149,7 @@ jobs:
           mv dist/FreeScribeInstaller.pkg dist/FreeScribeInstaller_arm64.pkg
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: FreeScribeInstaller_arm64.pkg
           path: dist/FreeScribeInstaller_arm64.pkg
@@ -160,17 +159,17 @@ jobs:
     needs: [build-windows, build-macos-intel, build-macos-arm]
     steps:
       - name: Download Windows Installer
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: FreeScribeInstaller_windows.exe
 
       - name: Download Intel Installer
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: FreeScribeInstaller_x86_64.pkg
 
       - name: Download ARM Installer
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: FreeScribeInstaller_arm64.pkg
 
