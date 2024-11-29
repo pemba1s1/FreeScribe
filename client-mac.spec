@@ -35,7 +35,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch='x86_64',
+    target_arch=None,
     codesign_identity=None,
     icon=['src/FreeScribe.client/assets/logo.ico'],
 )
