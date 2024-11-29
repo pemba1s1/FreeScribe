@@ -89,7 +89,7 @@ jobs:
           asset_content_type: application/octet-stream
 
   
-  build-macos:
+  build-macos-intel:
     runs-on: macos-12
     permissions:
       contents: write
@@ -122,6 +122,10 @@ jobs:
         run: |
           ./build-pkg.sh
 
+      - name: Rename Installer
+        run: |
+          mv dist/FreeScribeInstaller.pkg dist/FreeScribeInstaller_x86_64.pkg
+
       - name: Check if alpha release
         id: check_alpha
         run: |
@@ -147,6 +151,71 @@ jobs:
             For full changelog, see [the commits since last release](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.changelog.last_tag }}...${{ github.ref }})
           draft: false
           prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
-          files: dist/FreeScribeInstaller.pkg
+          files: dist/FreeScribeInstaller_x86_64.pkg
+  
+  build-macos-arm:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PortAudio
+        run: |
+          brew install portaudio
+
+      - name: Install requirements
+        run: |
+          pip install -r client_requirements.txt
+
+      - name: Install ffmpeg
+        run: |
+          brew install ffmpeg
+
+      - name: Build macOS app
+        run: |
+          ./build-mac.sh
+      
+      - name: Build PKG installer
+        run: |
+          ./build-pkg.sh
+
+      - name: Rename Installer
+        run: |
+          mv dist/FreeScribeInstaller.pkg dist/FreeScribeInstaller_arm64.pkg
+
+      - name: Check if alpha release
+        id: check_alpha
+        run: |
+          if ("${{ github.ref }}" -like "*.alpha") {
+            echo "is_alpha=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "is_alpha=false" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
+      - name: Upload Installer
+        id: upload-installer
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: FreeScribeInstaller_macos.pkg
+          tag_name: ${{ github.ref }}
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            For full changelog, see [the commits since last release](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.changelog.last_tag }}...${{ github.ref }})
+          draft: false
+          prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
+          files: dist/FreeScribeInstaller_arm64.pkg
+  
   
           
