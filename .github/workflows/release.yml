@@ -91,11 +91,7 @@ jobs:
       - name: Install requirements
         run: |
           pip install -r client_requirements.txt
-
-      - name: llama_cpp with Metal
-        run: |
-          pip uninstall -y llama-cpp-python
-          pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
+          
       - name: Install ffmpeg
         run: |
           brew install ffmpeg
@@ -138,11 +134,6 @@ jobs:
       - name: Install requirements
         run: |
           pip install -r client_requirements.txt
-
-      - name: llama_cpp with Metal
-        run: |
-          pip uninstall -y llama-cpp-python
-          pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
           
       - name: Install ffmpeg
         run: |
