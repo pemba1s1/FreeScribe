@@ -23,20 +23,20 @@ def get_resource_path(*filename: str, shared: bool = False) -> str:
     :return: The full path to the file.
     :rtype: str
     """
-    if hasattr(sys, '_MEIPASS'):
-        base = _get_user_data_dir(shared)
-        freescribe_dir = os.path.join(base, 'FreeScribe')
-        
-        # Check if the FreeScribe directory exists, if not, create it
-        try:
-            if not os.path.exists(freescribe_dir):
-                os.makedirs(freescribe_dir)
-        except OSError as e:
-            raise RuntimeError(f"Failed to create FreeScribe directory: {e}")
-        
-        return os.path.join(freescribe_dir, *filename)
-    else:
+    if not hasattr(sys, '_MEIPASS'):
         return os.path.abspath(os.path.join(*filename))
+    
+    base = _get_user_data_dir(shared)
+    freescribe_dir = os.path.join(base, 'FreeScribe')
+    
+    # Check if the FreeScribe directory exists, if not, create it
+    try:
+        if not os.path.exists(freescribe_dir):
+            os.makedirs(freescribe_dir)
+    except OSError as e:
+        raise RuntimeError(f"Failed to create FreeScribe directory: {e}")
+    
+    return os.path.join(freescribe_dir, *filename)
 
 def _get_user_data_dir(shared: bool) -> str:
     """
