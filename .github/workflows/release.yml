@@ -209,6 +209,4 @@ jobs:
           draft: false
           prerelease: ${{ steps.check_alpha.outputs.is_alpha == 'true' }}
           files: |
-            FreeScribeInstaller_arm64.pkg
             FreeScribeInstaller_x86_64.pkg
-            FreeScribeInstaller_windows.exe
