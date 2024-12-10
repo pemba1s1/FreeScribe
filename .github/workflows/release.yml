@@ -93,10 +93,10 @@ jobs:
         run: |
           pip install -r client_requirements.txt
       
-      - name: Uninstall CUDA-enabled llama_cpp (if necessary) and install CPU-only llama_cpp
-        run: |
-          pip uninstall -y llama-cpp-python
-          pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
+      # - name: Uninstall CUDA-enabled llama_cpp (if necessary) and install CPU-only llama_cpp
+      #   run: |
+      #     pip uninstall -y llama-cpp-python
+      #     pip install --index-url https://abetlen.github.io/llama-cpp-python/whl/metal --extra-index-url https://pypi.org/simple llama-cpp-python==v0.2.90
           
       - name: Install ffmpeg
         run: |
