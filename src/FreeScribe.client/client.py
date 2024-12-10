@@ -43,6 +43,10 @@ from utils.ip_utils import is_private_ip
 from utils.file_utils import get_resource_path
 import ctypes
 
+if sys.platform == "darwin":
+    from utils.install_cert import install_cert
+    install_cert()
+
 # GUI Setup
 root = tk.Tk()
 root.title("AI Medical Scribe")
