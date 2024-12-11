@@ -15,6 +15,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import scrolledtext, ttk, filedialog
+import certifi
 import requests
 import pyperclip
 import wave
@@ -42,10 +43,12 @@ from Model import  ModelManager
 from utils.ip_utils import is_private_ip
 from utils.file_utils import get_resource_path
 import ctypes
+import ssl
 
 if sys.platform == "darwin":
-    from utils.install_cert import install_cert
-    install_cert()
+    abspath_to_certifi_cafile = os.path.abspath(certifi.where())
+    os.environ['SSL_CERT_FILE'] = abspath_to_certifi_cafile
+    os.environ['REQUESTS_CA_BUNDLE'] = abspath_to_certifi_cafile
 
 # GUI Setup
 root = tk.Tk()
