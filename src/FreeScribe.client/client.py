@@ -43,7 +43,6 @@ from Model import  ModelManager
 from utils.ip_utils import is_private_ip
 from utils.file_utils import get_resource_path
 import ctypes
-import ssl
 
 if sys.platform == "darwin":
     abspath_to_certifi_cafile = os.path.abspath(certifi.where())
