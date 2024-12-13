@@ -1247,11 +1247,7 @@ def _load_stt_model_thread():
 
 def faster_whisper_transcribe(audio):
     segments, info = stt_local_model.transcribe(audio, language="en")
-    result = ""
-    for segment in segments:
-        result += segment.text + " "
-
-    return result
+    return "".join(f"{segment.text} " for segment in segments)
 
 # Configure grid weights for scalability
 root.grid_columnconfigure(0, weight=1, minsize= 10)
