@@ -1246,8 +1246,14 @@ def _load_stt_model_thread():
         print("Closing STT loading window.")
 
 def faster_whisper_transcribe(audio):
-    segments, info = stt_local_model.transcribe(audio, language="en")
-    return "".join(f"{segment.text} " for segment in segments)
+    try:
+        segments, info = stt_local_model.transcribe(audio, language="en")
+        
+        return "".join(f"{segment.text} " for segment in segments)
+    except Exception as e:
+        error_message = f"Transcription failed: {str(e)}"
+        print(f"Error during transcription: {str(e)}")  # Log the error
+        return error_message
 
 # Configure grid weights for scalability
 root.grid_columnconfigure(0, weight=1, minsize= 10)
