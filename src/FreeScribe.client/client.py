@@ -32,7 +32,7 @@ import time
 import queue
 import atexit
 from UI.MainWindowUI import MainWindowUI
-from UI.SettingsWindow import SettingsWindow, SettingsKeys
+from UI.SettingsWindow import SettingsWindow, SettingsKeys, Architectures
 from UI.Widgets.CustomTextBox import CustomTextBox
 from UI.LoadingWindow import LoadingWindow
 from UI.Widgets.MicrophoneSelector import MicrophoneState
@@ -1229,9 +1229,9 @@ def _load_stt_model_thread():
     print(f"Loading STT model: {model}")
     try:
         # Load the specified Whisper model
-        device_type = "cpu"
-        if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == "CUDA (Nvidia GPU)":
-            device_type = "cuda"
+        device_type = Architectures.CPU.value
+        if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == Architectures.CUDA.label:
+            device_type = Architectures.CUDA.value
 
         stt_local_model = WhisperModel(model, device=device_type)
 
@@ -1248,7 +1248,7 @@ def _load_stt_model_thread():
 def faster_whisper_transcribe(audio):
     try:
         segments, info = stt_local_model.transcribe(audio, language="en")
-        
+
         return "".join(f"{segment.text} " for segment in segments)
     except Exception as e:
         error_message = f"Transcription failed: {str(e)}"
