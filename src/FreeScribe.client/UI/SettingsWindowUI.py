@@ -580,6 +580,7 @@ class SettingsWindowUI:
 
         # save the old whisper model to compare with the new model later
         old_local_whisper = self.settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value]
+        old_whisper_architecture = self.settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value]
         old_model = self.settings.editable_settings["Whisper Model"]
 
         self.settings.save_settings(
@@ -606,10 +607,13 @@ class SettingsWindowUI:
 
         # loading the model after the window is closed to prevent the window from freezing
         # if Local Whisper is selected, compare the old model with the new model and reload the model if it has changed
+        print(old_whisper_architecture, self.settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value])
         if self.settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] and (
-                old_local_whisper != self.settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] or old_model !=
-                self.settings.editable_settings["Whisper Model"]):
+                old_local_whisper != self.settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] or 
+                old_model !=self.settings.editable_settings["Whisper Model"] or 
+                self.settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] != old_whisper_architecture):
             self.root.event_generate("<<LoadSttModel>>")
+
 
     def reset_to_default(self):
         """
