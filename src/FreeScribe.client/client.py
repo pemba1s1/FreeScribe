@@ -293,7 +293,7 @@ def realtime_text():
                             update_gui("Local Whisper model not loaded. Please check your settings.")
                             break
 
-                        result = faster_whisper_transcribe(audio_data)
+                        result = faster_whisper_transcribe(audio_buffer)
 
                         if not local_cancel_flag and not is_audio_processing_realtime_canceled.is_set():
                             update_gui(result)
@@ -1246,7 +1246,7 @@ def _load_stt_model_thread():
         print("Closing STT loading window.")
 
 def faster_whisper_transcribe(audio):
-    segments, info = stt_local_model.transcribe(audio)
+    segments, info = stt_local_model.transcribe(audio, language="en")
     result = ""
     for segment in segments:
         result += segment.text + " "
