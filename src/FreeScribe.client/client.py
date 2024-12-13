@@ -24,7 +24,7 @@ import json
 import pyaudio
 import tkinter.messagebox as messagebox
 import datetime
-import whisper # python package is named openai-whisper
+from faster_whisper import WhisperModel
 import scrubadub
 import re
 import speech_recognition as sr # python package is named speechrecognition
@@ -293,9 +293,10 @@ def realtime_text():
                             update_gui("Local Whisper model not loaded. Please check your settings.")
                             break
 
-                        result = stt_local_model.transcribe(audio_buffer, fp16=False)
+                        result = faster_whisper_transcribe(audio_data)
+
                         if not local_cancel_flag and not is_audio_processing_realtime_canceled.is_set():
-                            update_gui(result['text'])
+                            update_gui(result)
                     else:
                         print("Remote Real Time Whisper")
                         if frames:
@@ -606,8 +607,9 @@ def send_audio_to_server():
             uploaded_file_path = None
 
             # Transcribe the audio file using the loaded model
-            result = stt_local_model.transcribe(file_to_send)
-            transcribed_text = result["text"]
+            result = faster_whisper_transcribe(file_to_send)
+
+            transcribed_text = result
 
             # done with file clean up
             if os.path.exists(file_to_send) and delete_file is True:
@@ -1227,7 +1229,12 @@ def _load_stt_model_thread():
     print(f"Loading STT model: {model}")
     try:
         # Load the specified Whisper model
-        stt_local_model = whisper.load_model(model)
+        device_type = "cpu"
+        if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == "CUDA (Nvidia GPU)":
+            device_type = "cuda"
+
+        stt_local_model = WhisperModel(model, device=device_type)
+
         print("STT model loaded successfully.")
     except Exception as e:
         # Log the error message
@@ -1238,6 +1245,13 @@ def _load_stt_model_thread():
         stt_loading_window.destroy()
         print("Closing STT loading window.")
 
+def faster_whisper_transcribe(audio):
+    segments, info = stt_local_model.transcribe(audio)
+    result = ""
+    for segment in segments:
+        result += segment.text + " "
+
+    return result
 
 # Configure grid weights for scalability
 root.grid_columnconfigure(0, weight=1, minsize= 10)

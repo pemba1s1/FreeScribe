@@ -199,6 +199,22 @@ class SettingsWindowUI:
         
         left_row += 1
 
+        # Whisper Architecture Dropdown
+        self.whisper_architecture_label = tk.Label(right_frame, text=SettingsKeys.WHISPER_ARCHITECTURE.value)
+        self.whisper_architecture_label.grid(row=right_row, column=0, padx=0, pady=5, sticky="w")
+        whisper_architecture_options = self.settings.get_available_architectures()
+        self.whisper_architecture_dropdown = ttk.Combobox(right_frame, values=whisper_architecture_options, width=20, state="readonly")
+        if self.settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] in whisper_architecture_options:
+            self.whisper_architecture_dropdown.current(whisper_architecture_options.index(self.settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value]))
+        else:
+            # Default cpu
+            self.whisper_architecture_dropdown.set("CPU")
+        
+        self.whisper_architecture_dropdown.grid(row=right_row, column=1, padx=0, pady=5, sticky="w")
+        self.settings.editable_settings_entries[SettingsKeys.WHISPER_ARCHITECTURE.value] = self.whisper_architecture_dropdown
+
+        right_row += 1
+
         # set the state of the whisper settings based on the SettingsKeys.LOCAL_WHISPER.value checkbox once all widgets are created
         self.toggle_remote_whisper_settings()
 
