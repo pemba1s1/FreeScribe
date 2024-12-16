@@ -45,6 +45,8 @@ from UI.DebugWindow import DualOutput
 import traceback
 import sys
 from utils.utils import window_has_running_instance, bring_to_front, close_mutex
+import gc
+
 
 dual = DualOutput()
 sys.stdout = dual
@@ -1242,7 +1244,7 @@ def _load_stt_model_thread():
         stt_local_model = WhisperModel(
             model, 
             device=device_type,
-            cpu_threads=app_settings.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value],
+            cpu_threads=int(app_settings.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value]),
             compute_type=app_settings.editable_settings[SettingsKeys.WHSPER_COMPUTE_TYPE.value],)
 
         print("STT model loaded successfully.")
@@ -1270,8 +1272,8 @@ def faster_whisper_transcribe(audio):
 
         segments, info = stt_local_model.transcribe(
             audio,
-            beam_size=app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value],
-            vad_filter=app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value],
+            beam_size=int(app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value]),
+            vad_filter=bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value]),
         )
 
         return "".join(f"{segment.text} " for segment in segments)
