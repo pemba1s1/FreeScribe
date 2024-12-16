@@ -161,7 +161,7 @@ class SettingsWindow():
         ]
 
         self.editable_settings = {
-            "Model": "gpt-4",
+            "Model": "gemma2:2b-instruct-q8_0",
             "Model Endpoint": "https://localhost:3334/v1",
             "Use Local LLM": True,
             "Architecture": "CPU",
