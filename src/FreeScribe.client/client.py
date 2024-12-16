@@ -1252,11 +1252,14 @@ def _load_stt_model_thread():
 
 def unload_stt_model():
     global stt_local_model
-    print("Unloading STT model from device.")
-    del stt_local_model
-    gc.collect()
-    stt_local_model = None
-    print("STT model unloaded successfully.")
+    if stt_local_model is not None:
+        print("Unloading STT model from device.")
+        del stt_local_model
+        gc.collect()
+        stt_local_model = None
+        print("STT model unloaded successfully.")
+    else:
+        print("STT model is already unloaded.")
 
 def get_selected_whisper_architecture():
     # Load the specified Whisper model
