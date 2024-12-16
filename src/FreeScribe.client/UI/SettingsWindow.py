@@ -158,6 +158,7 @@ class SettingsWindow():
 
         self.adv_whisper_settings = [
             "Real Time Audio Length",
+            "BlankSpace", # Represents the whisper cuttoff
             SettingsKeys.WHISPER_BEAM_SIZE.value,
             SettingsKeys.WHISPER_CPU_COUNT.value,
             SettingsKeys.WHISPER_VAD_FILTER.value,
