@@ -29,12 +29,17 @@ import threading
 from UI.Widgets.MicrophoneSelector import MicrophoneState
 from utils.ip_utils import is_valid_url
 from enum import Enum
+import multiprocessing
 
 class SettingsKeys(Enum):
     LOCAL_WHISPER = "Built-in Speech2Text"
     WHISPER_ENDPOINT = "Speech2Text (Whisper) Endpoint"
     WHISPER_SERVER_API_KEY = "Speech2Text (Whisper) API Key"
     WHISPER_ARCHITECTURE = "Speech2Text (Whisper) Architecture"
+    WHISPER_CPU_COUNT = "Speech2Text (Whisper) CPU Thread Count"
+    WHSPER_COMPUTE_TYPE = "Speech2Text (Whisper) Compute Type"
+    WHISPER_BEAM_SIZE = "Speech2Text (Whisper) Beam Size"
+    WHISPER_VAD_FILTER = "Use Speech2Text (Whisper) VAD Filter"
 
 
 class Architectures(Enum):
@@ -153,6 +158,10 @@ class SettingsWindow():
 
         self.adv_whisper_settings = [
             "Real Time Audio Length",
+            SettingsKeys.WHISPER_BEAM_SIZE.value,
+            SettingsKeys.WHISPER_CPU_COUNT.value,
+            SettingsKeys.WHISPER_VAD_FILTER.value,
+            SettingsKeys.WHSPER_COMPUTE_TYPE.value,
         ]
 
 
@@ -190,6 +199,10 @@ class SettingsWindow():
             SettingsKeys.WHISPER_ENDPOINT.value: "https://localhost:2224/whisperaudio",
             SettingsKeys.WHISPER_SERVER_API_KEY.value: "",
             SettingsKeys.WHISPER_ARCHITECTURE.value: "CPU",
+            SettingsKeys.WHISPER_BEAM_SIZE.value: 5,
+            SettingsKeys.WHISPER_CPU_COUNT.value: multiprocessing.cpu_count(),
+            SettingsKeys.WHISPER_VAD_FILTER.value: False,
+            SettingsKeys.WHSPER_COMPUTE_TYPE.value: "int8",
             "Whisper Model": "small.en",
             "Current Mic": "None",
             "Real Time": True,

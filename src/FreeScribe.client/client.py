@@ -1236,7 +1236,11 @@ def _load_stt_model_thread():
         if device_type == Architectures.CUDA.value:
             set_cuda_paths()
 
-        stt_local_model = WhisperModel(model, device=device_type)
+        stt_local_model = WhisperModel(
+            model, 
+            device=device_type,
+            cpu_threads=app_settings.editable_settings["Whisper CPU Threads"],
+            compute_type=app_settings.editable_settings["Whisper Compute Type"],)
 
         print("STT model loaded successfully.")
     except Exception as e:
@@ -1254,7 +1258,11 @@ def faster_whisper_transcribe(audio):
             load_stt_model()
             return "Speach to text model not loaded. Please try again once loaded."
 
-        segments, info = stt_local_model.transcribe(audio, language="en")
+        segments, info = stt_local_model.transcribe(
+            audio,
+            beam_size=app_settings.editable_settings["Whisper Beam Size"],
+            vad_filter=app_settings.editable_settings["Whisper VAD Filter"],
+        )
 
         return "".join(f"{segment.text} " for segment in segments)
     except Exception as e:
