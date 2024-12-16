@@ -1259,9 +1259,11 @@ def _load_stt_model_thread():
 
 def unload_stt_model():
     global stt_local_model
+    print("Unloading STT model from device.")
     del stt_local_model
     gc.collect()
     stt_local_model = None
+    print("STT model unloaded successfully.")
 
 
 def faster_whisper_transcribe(audio):
