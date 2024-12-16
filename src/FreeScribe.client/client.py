@@ -1280,11 +1280,17 @@ def _load_stt_model_thread():
         device_type = get_selected_whisper_architecture()
         set_cuda_paths()
 
+        compute_type = app_settings.editable_settings[SettingsKeys.WHISPER_COMPUTE_TYPE.value]
+        # Change the  compute type automatically if using a gpu one.
+        if device_type == Architectures.CPU.architecture_value and compute_type == "float16":
+            compute_type = "int8"
+            
+
         stt_local_model = WhisperModel(
             model, 
             device=device_type,
             cpu_threads=int(app_settings.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value]),
-            compute_type=app_settings.editable_settings[SettingsKeys.WHISPER_COMPUTE_TYPE.value],)
+            compute_type=compute_type)
 
         print("STT model loaded successfully.")
     except Exception as e:
