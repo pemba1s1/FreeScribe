@@ -1349,13 +1349,10 @@ def faster_whisper_transcribe(audio):
             if beam_size <= 0:
                 raise ValueError("beam_size must be greater than 0")
         except (ValueError, TypeError) as e:
-            return f"Invalid beam_size parameter: {str(e)}"
+            return f"Invalid beam_size parameter. Please go into the settings and ensure you have a integer greater than 0: {str(e)}"
 
         # Validate vad_filter
-        try:
-            vad_filter = bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value])
-        except (ValueError, TypeError) as e:
-            return f"Invalid vad_filter parameter: {str(e)}"
+        vad_filter = bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value])
 
         segments, info = stt_local_model.transcribe(
             audio,
