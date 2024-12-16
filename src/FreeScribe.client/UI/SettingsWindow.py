@@ -37,7 +37,7 @@ class SettingsKeys(Enum):
     WHISPER_SERVER_API_KEY = "Speech2Text (Whisper) API Key"
     WHISPER_ARCHITECTURE = "Speech2Text (Whisper) Architecture"
     WHISPER_CPU_COUNT = "Speech2Text (Whisper) CPU Thread Count"
-    WHSPER_COMPUTE_TYPE = "Speech2Text (Whisper) Compute Type"
+    WHISPER_COMPUTE_TYPE = "Speech2Text (Whisper) Compute Type"
     WHISPER_BEAM_SIZE = "Speech2Text (Whisper) Beam Size"
     WHISPER_VAD_FILTER = "Use Speech2Text (Whisper) VAD Filter"
 
@@ -161,7 +161,7 @@ class SettingsWindow():
             SettingsKeys.WHISPER_BEAM_SIZE.value,
             SettingsKeys.WHISPER_CPU_COUNT.value,
             SettingsKeys.WHISPER_VAD_FILTER.value,
-            SettingsKeys.WHSPER_COMPUTE_TYPE.value,
+            SettingsKeys.WHISPER_COMPUTE_TYPE.value,
         ]
 
 
@@ -202,7 +202,7 @@ class SettingsWindow():
             SettingsKeys.WHISPER_BEAM_SIZE.value: 5,
             SettingsKeys.WHISPER_CPU_COUNT.value: multiprocessing.cpu_count(),
             SettingsKeys.WHISPER_VAD_FILTER.value: False,
-            SettingsKeys.WHSPER_COMPUTE_TYPE.value: "float16",
+            SettingsKeys.WHISPER_COMPUTE_TYPE.value: "float16",
             "Whisper Model": "small.en",
             "Current Mic": "None",
             "Real Time": True,
@@ -596,7 +596,7 @@ class SettingsWindow():
         old_whisper_architecture = self.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value]
         old_model = self.editable_settings["Whisper Model"]
         old_cpu_count = self.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value]
-        old_compute_type = self.editable_settings[SettingsKeys.WHSPER_COMPUTE_TYPE.value]
+        old_compute_type = self.editable_settings[SettingsKeys.WHISPER_COMPUTE_TYPE.value]
 
         # loading the model after the window is closed to prevent the window from freezing
         # if Local Whisper is selected, compare the old model with the new model and reload the model if it has changed
@@ -605,5 +605,5 @@ class SettingsWindow():
                 old_model != self.editable_settings_entries["Whisper Model"].get() or 
                 old_whisper_architecture != self.editable_settings_entries[SettingsKeys.WHISPER_ARCHITECTURE.value].get() or 
                 old_cpu_count != self.editable_settings_entries[SettingsKeys.WHISPER_CPU_COUNT.value].get() or
-                old_compute_type != self.editable_settings_entries[SettingsKeys.WHSPER_COMPUTE_TYPE.value].get()):
+                old_compute_type != self.editable_settings_entries[SettingsKeys.WHISPER_COMPUTE_TYPE.value].get()):
             self.main_window.root.event_generate("<<LoadSttModel>>")
