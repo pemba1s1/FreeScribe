@@ -1250,6 +1250,10 @@ def _load_stt_model_thread():
 
 def faster_whisper_transcribe(audio):
     try:
+        if stt_local_model is None:
+            load_stt_model()
+            return "Speach to text model not loaded. Please try again once loaded."
+
         segments, info = stt_local_model.transcribe(audio, language="en")
 
         return "".join(f"{segment.text} " for segment in segments)
