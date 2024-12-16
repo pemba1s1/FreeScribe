@@ -1230,22 +1230,15 @@ def _load_stt_model_thread():
     stt_loading_window = LoadingWindow(root, "Speech to Text", "Loading Speech to Text. Please wait.")
     print(f"Loading STT model: {model}")
     try:
-        if stt_local_model is not None:
-            unload_stt_model()
-
-        # Load the specified Whisper model
-        device_type = Architectures.CPU.architecture_value
-        if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == Architectures.CUDA.label:
-            device_type = Architectures.CUDA.architecture_value
-
-        if device_type == Architectures.CUDA.value:
-            set_cuda_paths()
+        unload_stt_model()
+        device_type = get_selected_whisper_architecture()
+        set_cuda_paths()
 
         stt_local_model = WhisperModel(
             model, 
             device=device_type,
             cpu_threads=int(app_settings.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value]),
-            compute_type=app_settings.editable_settings[SettingsKeys.WHSPER_COMPUTE_TYPE.value],)
+            compute_type=app_settings.editable_settings[SettingsKeys.WHISPER_COMPUTE_TYPE.value],)
 
         print("STT model loaded successfully.")
     except Exception as e:
@@ -1265,6 +1258,13 @@ def unload_stt_model():
     stt_local_model = None
     print("STT model unloaded successfully.")
 
+def get_selected_whisper_architecture():
+    # Load the specified Whisper model
+    device_type = Architectures.CPU.architecture_value
+    if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == Architectures.CUDA.label:
+        device_type = Architectures.CUDA.architecture_value
+
+    return device_type
 
 def faster_whisper_transcribe(audio):
     try:
@@ -1285,22 +1285,23 @@ def faster_whisper_transcribe(audio):
         return error_message
 
 def set_cuda_paths():
-    nvidia_base_path = get_file_path('nvidia-drivers')  # Ensure this returns a Path object
-    
-    # Use `Path` operators
-    cuda_path = nvidia_base_path / 'cuda_runtime' / 'bin'
-    cublas_path = nvidia_base_path / 'cublas' / 'bin'
-    cudnn_path = nvidia_base_path / 'cudnn' / 'bin'
-    
-    # Convert Path objects to strings
-    paths_to_add = [str(cuda_path), str(cublas_path), str(cudnn_path)]
-    env_vars = ['CUDA_PATH', 'CUDA_PATH_V12_4', 'PATH']
+    if (get_selected_whisper_architecture() == Architectures.CUDA.architecture_value) or (app_settings.editable_settings["Architecture"] == Architectures.CUDA.label):
+        nvidia_base_path = get_file_path('nvidia-drivers')  # Ensure this returns a Path object
+        
+        # Use `Path` operators
+        cuda_path = nvidia_base_path / 'cuda_runtime' / 'bin'
+        cublas_path = nvidia_base_path / 'cublas' / 'bin'
+        cudnn_path = nvidia_base_path / 'cudnn' / 'bin'
+        
+        # Convert Path objects to strings
+        paths_to_add = [str(cuda_path), str(cublas_path), str(cudnn_path)]
+        env_vars = ['CUDA_PATH', 'CUDA_PATH_V12_4', 'PATH']
 
-    for env_var in env_vars:
-        current_value = os.environ.get(env_var, '')
-        new_value = os.pathsep.join(paths_to_add + ([current_value] if current_value else []))
-        print(new_value)
-        os.environ[env_var] = new_value
+        for env_var in env_vars:
+            current_value = os.environ.get(env_var, '')
+            new_value = os.pathsep.join(paths_to_add + ([current_value] if current_value else []))
+            print(new_value)
+            os.environ[env_var] = new_value
 
 # Configure grid weights for scalability
 root.grid_columnconfigure(0, weight=1, minsize= 10)
