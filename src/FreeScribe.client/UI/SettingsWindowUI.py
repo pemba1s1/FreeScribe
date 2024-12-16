@@ -270,7 +270,7 @@ class SettingsWindowUI:
             self.architecture_dropdown.current(architecture_options.index(self.settings.editable_settings["Architecture"]))
         else:
             # Default cpu
-            self.architecture_dropdown.set(Architectures.CPU.label))
+            self.architecture_dropdown.set(Architectures.CPU.label)
 
         self.architecture_dropdown.grid(row=left_row, column=1, padx=0, pady=5, sticky="w")
 
