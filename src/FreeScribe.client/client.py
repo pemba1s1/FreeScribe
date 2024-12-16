@@ -1229,9 +1229,9 @@ def _load_stt_model_thread():
     print(f"Loading STT model: {model}")
     try:
         # Load the specified Whisper model
-        device_type = Architectures.CPU.value
+        device_type = Architectures.CPU.architecture_value
         if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == Architectures.CUDA.label:
-            device_type = Architectures.CUDA.value
+            device_type = Architectures.CUDA.architecture_value
 
         if device_type == Architectures.CUDA.value:
             set_cuda_paths()
@@ -1241,9 +1241,9 @@ def _load_stt_model_thread():
         print("STT model loaded successfully.")
     except Exception as e:
         # Log the error message
-        print(f"An error occurred while loading STT: {e}")
+        print(f"An error occurred while loading STT {type(e).__name__}: {e}")
         stt_local_model = None
-        messagebox.showerror("Error", f"An error occurred while loading the STT model: {e}")
+        messagebox.showerror("Error", f"An error occurred while loading STT {type(e).__name__}: {e}")
     finally:
         stt_loading_window.destroy()
         print("Closing STT loading window.")
