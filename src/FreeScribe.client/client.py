@@ -48,6 +48,8 @@ from utils.utils import window_has_running_instance, bring_to_front, close_mutex
 import gc
 from pathlib import Path
 
+from WhisperModel import TranscribeError
+
 
 
 dual = DualOutput()
@@ -296,8 +298,10 @@ def realtime_text():
                         if stt_local_model is None:
                             update_gui("Local Whisper model not loaded. Please check your settings.")
                             break
-
-                        result = faster_whisper_transcribe(audio_buffer)
+                        try:
+                            result = faster_whisper_transcribe(audio_buffer)
+                        except Exception as e:
+                            update_gui(f"\nError: {e}\n")
 
                         if not local_cancel_flag and not is_audio_processing_realtime_canceled.is_set():
                             update_gui(result)
@@ -611,7 +615,10 @@ def send_audio_to_server():
             uploaded_file_path = None
 
             # Transcribe the audio file using the loaded model
-            result = faster_whisper_transcribe(file_to_send)
+            try:
+                result = faster_whisper_transcribe(audio_buffer)
+            except Exception as e:
+                result = f"An error occurred ({type(e).__name__}): {e}"
 
             transcribed_text = result
 
@@ -1334,7 +1341,7 @@ def faster_whisper_transcribe(audio):
     try:
         if stt_local_model is None:
             load_stt_model()
-            return "Speach to text model not loaded. Please try again once loaded."
+            raise TranscribeError("Speech2Text model not loaded. Please try again once loaded.")
 
         segments, info = stt_local_model.transcribe(
             audio,
@@ -1346,7 +1353,7 @@ def faster_whisper_transcribe(audio):
     except Exception as e:
         error_message = f"Transcription failed: {str(e)}"
         print(f"Error during transcription: {str(e)}")
-        return error_message
+        raise TranscribeError(error_message)
 
 def set_cuda_paths():
     """
