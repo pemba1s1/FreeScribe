@@ -600,10 +600,10 @@ class SettingsWindow():
 
         # loading the model after the window is closed to prevent the window from freezing
         # if Local Whisper is selected, compare the old model with the new model and reload the model if it has changed
-        if self.settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] and (
+        if self.editable_settings[SettingsKeys.LOCAL_WHISPER.value] and (
                 old_local_whisper != self.editable_settings_entries[SettingsKeys.LOCAL_WHISPER.value].get() or 
                 old_model != self.editable_settings_entries["Whisper Model"].get() or 
-                old_whisper_architecture != self.settings.editable_settings_entries[SettingsKeys.WHISPER_ARCHITECTURE.value].get() or 
+                old_whisper_architecture != self.editable_settings_entries[SettingsKeys.WHISPER_ARCHITECTURE.value].get() or 
                 old_cpu_count != self.editable_settings_entries[SettingsKeys.WHISPER_CPU_COUNT.value].get() or
                 old_compute_type != self.editable_settings_entries[SettingsKeys.WHSPER_COMPUTE_TYPE.value].get()):
-            self.root.event_generate("<<LoadSttModel>>")
+            self.main_window.root.event_generate("<<LoadSttModel>>")
