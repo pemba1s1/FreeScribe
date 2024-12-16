@@ -1239,8 +1239,8 @@ def _load_stt_model_thread():
         stt_local_model = WhisperModel(
             model, 
             device=device_type,
-            cpu_threads=app_settings.editable_settings["Whisper CPU Threads"],
-            compute_type=app_settings.editable_settings["Whisper Compute Type"],)
+            cpu_threads=app_settings.editable_settings[SettingsKeys.WHISPER_CPU_COUNT.value],
+            compute_type=app_settings.editable_settings[SettingsKeys.WHSPER_COMPUTE_TYPE.value],)
 
         print("STT model loaded successfully.")
     except Exception as e:
@@ -1260,8 +1260,8 @@ def faster_whisper_transcribe(audio):
 
         segments, info = stt_local_model.transcribe(
             audio,
-            beam_size=app_settings.editable_settings["Whisper Beam Size"],
-            vad_filter=app_settings.editable_settings["Whisper VAD Filter"],
+            beam_size=app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value],
+            vad_filter=app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value],
         )
 
         return "".join(f"{segment.text} " for segment in segments)
