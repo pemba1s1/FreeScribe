@@ -1228,6 +1228,9 @@ def _load_stt_model_thread():
     stt_loading_window = LoadingWindow(root, "Speech to Text", "Loading Speech to Text. Please wait.")
     print(f"Loading STT model: {model}")
     try:
+        if stt_local_model is not None:
+            unload_stt_model()
+
         # Load the specified Whisper model
         device_type = Architectures.CPU.architecture_value
         if app_settings.editable_settings[SettingsKeys.WHISPER_ARCHITECTURE.value] == Architectures.CUDA.label:
@@ -1251,6 +1254,13 @@ def _load_stt_model_thread():
     finally:
         stt_loading_window.destroy()
         print("Closing STT loading window.")
+
+def unload_stt_model():
+    global stt_local_model
+    del stt_local_model
+    gc.collect()
+    stt_local_model = None
+
 
 def faster_whisper_transcribe(audio):
     try:
