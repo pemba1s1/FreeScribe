@@ -1343,10 +1343,24 @@ def faster_whisper_transcribe(audio):
             load_stt_model()
             raise TranscribeError("Speech2Text model not loaded. Please try again once loaded.")
 
+        # Validate beam_size
+        try:
+            beam_size = int(app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value])
+            if beam_size <= 0:
+                raise ValueError("beam_size must be greater than 0")
+        except (ValueError, TypeError) as e:
+            return f"Invalid beam_size parameter: {str(e)}"
+
+        # Validate vad_filter
+        try:
+            vad_filter = bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value])
+        except (ValueError, TypeError) as e:
+            return f"Invalid vad_filter parameter: {str(e)}"
+
         segments, info = stt_local_model.transcribe(
             audio,
-            beam_size=int(app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value]),
-            vad_filter=bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value]),
+            beam_size=beam_size,
+            vad_filter=vad_filter,
         )
 
         return "".join(f"{segment.text} " for segment in segments)
