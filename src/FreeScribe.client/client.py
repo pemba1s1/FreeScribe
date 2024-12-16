@@ -46,6 +46,8 @@ import traceback
 import sys
 from utils.utils import window_has_running_instance, bring_to_front, close_mutex
 import gc
+from pathlib import Path
+
 
 
 dual = DualOutput()
@@ -1289,7 +1291,7 @@ def faster_whisper_transcribe(audio):
 
 def set_cuda_paths():
     if (get_selected_whisper_architecture() == Architectures.CUDA.architecture_value) or (app_settings.editable_settings["Architecture"] == Architectures.CUDA.label):
-        nvidia_base_path = get_file_path('nvidia-drivers')  # Ensure this returns a Path object
+        nvidia_base_path = Path(get_file_path('nvidia-drivers'))  # Ensure this returns a Path object
         
         # Use `Path` operators
         cuda_path = nvidia_base_path / 'cuda_runtime' / 'bin'
