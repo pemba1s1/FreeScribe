@@ -1303,7 +1303,6 @@ def set_cuda_paths():
         for env_var in env_vars:
             current_value = os.environ.get(env_var, '')
             new_value = os.pathsep.join(paths_to_add + ([current_value] if current_value else []))
-            print(new_value)
             os.environ[env_var] = new_value
 
 # Configure grid weights for scalability
