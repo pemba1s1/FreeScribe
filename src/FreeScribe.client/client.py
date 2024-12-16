@@ -1347,9 +1347,9 @@ def faster_whisper_transcribe(audio):
         try:
             beam_size = int(app_settings.editable_settings[SettingsKeys.WHISPER_BEAM_SIZE.value])
             if beam_size <= 0:
-                raise ValueError("beam_size must be greater than 0")
+                raise ValueError(f"{SettingsKeys.WHISPER_BEAM_SIZE.value} must be greater than 0 in advanced settings")
         except (ValueError, TypeError) as e:
-            return f"Invalid beam_size parameter. Please go into the settings and ensure you have a integer greater than 0: {str(e)}"
+            return f"Invalid {SettingsKeys.WHISPER_BEAM_SIZE.value} parameter. Please go into the advanced settings and ensure you have a integer greater than 0: {str(e)}"
 
         # Validate vad_filter
         vad_filter = bool(app_settings.editable_settings[SettingsKeys.WHISPER_VAD_FILTER.value])
