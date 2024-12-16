@@ -1356,20 +1356,22 @@ def set_cuda_paths():
     architecture is selected. Updates CUDA_PATH, CUDA_PATH_V12_4, and PATH
     environment variables with the appropriate NVIDIA driver paths.
     """
-    if (get_selected_whisper_architecture() == Architectures.CUDA.architecture_value) or (app_settings.editable_settings["Architecture"] == Architectures.CUDA.label):
-        nvidia_base_path = Path(get_file_path('nvidia-drivers'))
-        
-        cuda_path = nvidia_base_path / 'cuda_runtime' / 'bin'
-        cublas_path = nvidia_base_path / 'cublas' / 'bin'
-        cudnn_path = nvidia_base_path / 'cudnn' / 'bin'
-        
-        paths_to_add = [str(cuda_path), str(cublas_path), str(cudnn_path)]
-        env_vars = ['CUDA_PATH', 'CUDA_PATH_V12_4', 'PATH']
+    if (get_selected_whisper_architecture() != Architectures.CUDA.architecture_value) or (app_settings.editable_settings["Architecture"] != Architectures.CUDA.label):
+        return
 
-        for env_var in env_vars:
-            current_value = os.environ.get(env_var, '')
-            new_value = os.pathsep.join(paths_to_add + ([current_value] if current_value else []))
-            os.environ[env_var] = new_value
+    nvidia_base_path = Path(get_file_path('nvidia-drivers'))
+    
+    cuda_path = nvidia_base_path / 'cuda_runtime' / 'bin'
+    cublas_path = nvidia_base_path / 'cublas' / 'bin'
+    cudnn_path = nvidia_base_path / 'cudnn' / 'bin'
+    
+    paths_to_add = [str(cuda_path), str(cublas_path), str(cudnn_path)]
+    env_vars = ['CUDA_PATH', 'CUDA_PATH_V12_4', 'PATH']
+
+    for env_var in env_vars:
+        current_value = os.environ.get(env_var, '')
+        new_value = os.pathsep.join(paths_to_add + ([current_value] if current_value else []))
+        os.environ[env_var] = new_value
 
 # Configure grid weights for scalability
 root.grid_columnconfigure(0, weight=1, minsize= 10)
