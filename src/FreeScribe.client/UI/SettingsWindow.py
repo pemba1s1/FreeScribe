@@ -202,7 +202,7 @@ class SettingsWindow():
             SettingsKeys.WHISPER_BEAM_SIZE.value: 5,
             SettingsKeys.WHISPER_CPU_COUNT.value: multiprocessing.cpu_count(),
             SettingsKeys.WHISPER_VAD_FILTER.value: False,
-            SettingsKeys.WHSPER_COMPUTE_TYPE.value: "int8",
+            SettingsKeys.WHSPER_COMPUTE_TYPE.value: "float16",
             "Whisper Model": "small.en",
             "Current Mic": "None",
             "Real Time": True,
