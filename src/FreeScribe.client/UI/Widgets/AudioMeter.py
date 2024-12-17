@@ -20,6 +20,7 @@ from tkinter import ttk
 import pyaudio
 import numpy as np
 from threading import Thread
+from UI.Widgets.MicrophoneSelector import MicrophoneState
 
 class AudioMeter(tk.Frame):
     """
@@ -58,6 +59,7 @@ class AudioMeter(tk.Frame):
         self.threshold = threshold
         self.destroyed = False  # Add flag to track widget destruction
         self.stop_monitoring = threading.Event()
+        self.error_message_box = None  # Add error message box attribute
         self.setup_audio()
         self.create_widgets()
         
@@ -91,6 +93,10 @@ class AudioMeter(tk.Frame):
             self.stream.close()
         if hasattr(self, 'p') and self.p:
             self.p.terminate()
+
+        # Cancel error message if scheduled
+        if self.error_message_box is not None:
+            self.error_message_box.destroy()
 
     def destroy(self):
         """
@@ -197,15 +203,24 @@ class AudioMeter(tk.Frame):
         """
         if not self.running:
             self.running = True
-            self.stream = self.p.open(
-                format=self.FORMAT,
-                channels=self.CHANNELS,
-                rate=self.RATE,
-                input=True,
-                frames_per_buffer=self.CHUNK,
-            )
             
-            print("Audio monitoring started.")
+            try:
+                self.stream = self.p.open(
+                    format=self.FORMAT,
+                    channels=1,
+                    rate=self.RATE,
+                    input=True,
+                    input_device_index=MicrophoneState.SELECTED_MICROPHONE_INDEX,
+                    frames_per_buffer=self.CHUNK,
+                )
+            except (OSError, IOError) as e:
+                # show error message in thread-safe way
+                error_message = f"Please check your microphone settings under the speech2text settings tab. Error opening audio stream: {e}"
+                # create a new Tk instance to show the error message
+                self.error_message_box = tk.Tk()
+                self.error_message_box.withdraw()
+                self.master.after(0, lambda: tk.messagebox.showerror("Error", error_message, master=self.error_message_box))
+
             self.monitoring_thread = Thread(target=self.update_meter)
             self.monitoring_thread.start()
         else:

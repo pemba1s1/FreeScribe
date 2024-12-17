@@ -33,19 +33,38 @@ import time
 import queue
 import atexit
 from UI.MainWindowUI import MainWindowUI
-from UI.SettingsWindow import SettingsWindow
+from UI.SettingsWindow import SettingsWindow, SettingsKeys
 from UI.Widgets.CustomTextBox import CustomTextBox
 from UI.LoadingWindow import LoadingWindow
 from utils.file_utils import get_resource_path
 from utils.icon_utils import set_logo
+from UI.Widgets.MicrophoneSelector import MicrophoneState
 from Model import  ModelManager
 from utils.ip_utils import is_private_ip
-from utils.file_utils import get_resource_path
 import ctypes
+import sys
+from UI.DebugWindow import DualOutput
+import sys
+from utils.utils import window_has_running_instance, bring_to_front, close_mutex
 
-# GUI Setup
-root = tk.Tk()
-root.title("AI Medical Scribe")
+dual = DualOutput()
+sys.stdout = dual
+sys.stderr = dual
+
+APP_NAME = 'AI Medical Scribe'  # Application name
+
+# check if another instance of the application is already running.
+# if false, create a new instance of the application
+# if true, exit the current instance
+if not window_has_running_instance():
+    root = tk.Tk()
+    root.title(APP_NAME)
+else:
+    bring_to_front(APP_NAME)
+    sys.exit(0)
+
+# Register the close_mutex function to be called on exit
+atexit.register(close_mutex)
 
 # settings logic
 app_settings = SettingsWindow()
@@ -92,6 +111,9 @@ DEFAULT_BUTTON_COLOUR = "SystemButtonFace"
 #Thread tracking variables
 REALTIME_TRANSCRIBE_THREAD_ID = None
 GENERATION_THREAD_ID = None
+
+# Global instance of whisper model
+stt_local_model = None
 
 
 def get_prompt(formatted_message):
@@ -157,46 +179,86 @@ def toggle_pause():
         elif current_view == "minimal":
             pause_button.config(text="⏸️", bg=DEFAULT_BUTTON_COLOUR, highlightbackground=DEFAULT_BUTTON_COLOUR)
     
+SILENCE_WARNING_LENGTH = 10 # seconds, warn the user after 10s of no input something might be wrong
 
 def record_audio():
     global is_paused, frames, audio_queue
-    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
-    current_chunk = []
-    silent_duration = 0
-    record_duration = 0
-    minimum_silent_duration = int(app_settings.editable_settings["Real Time Silence Length"])
-    minimum_audio_duration = int(app_settings.editable_settings["Real Time Audio Length"])
-    
-    while is_recording:
-        if not is_paused:
-            data = stream.read(CHUNK, exception_on_overflow=False)
-            frames.append(data)
-            # Check for silence
-            audio_buffer = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768
-            if is_silent(audio_buffer, app_settings.editable_settings["Silence cut-off"]):
-                silent_duration += CHUNK / RATE
-            else:
-                current_chunk.append(data)
-                silent_duration = 0
-            
-            record_duration += CHUNK / RATE
-            
-            # If the current_chunk has at least 5 seconds of audio and 1 second of silence at the end
-            if record_duration >= minimum_audio_duration and silent_duration >= minimum_silent_duration:
-                if app_settings.editable_settings["Real Time"] and current_chunk:
-                    audio_queue.put(b''.join(current_chunk))
-                current_chunk = []
-                silent_duration = 0
-                record_duration = 0
 
-    # Send any remaining audio chunk when recording stops
-    if current_chunk:
-        audio_queue.put(b''.join(current_chunk))
+    try:
+        stream = p.open(
+            format=FORMAT, 
+            channels=1, 
+            rate=RATE, 
+            input=True,
+            frames_per_buffer=CHUNK, 
+            input_device_index=int(MicrophoneState.SELECTED_MICROPHONE_INDEX))
+    except (OSError, IOError) as e:
+        messagebox.showerror("Audio Error", f"Please check your microphone settings under whisper settings. Error opening audio stream: {e}")
+        return
 
-    stream.stop_stream()
-    stream.close()
-    audio_queue.put(None)
+    try:
 
+        current_chunk = []
+        silent_duration = 0
+        silent_warning_duration = 0
+        record_duration = 0
+        minimum_silent_duration = int(app_settings.editable_settings["Real Time Silence Length"])
+        minimum_audio_duration = int(app_settings.editable_settings["Real Time Audio Length"])
+        
+        while is_recording:
+            if not is_paused:
+                data = stream.read(CHUNK, exception_on_overflow=False)
+                frames.append(data)
+                # Check for silence
+                audio_buffer = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768
+                if is_silent(audio_buffer, app_settings.editable_settings["Silence cut-off"]):
+                    silent_duration += CHUNK / RATE
+                    silent_warning_duration += CHUNK / RATE
+                else:
+                    current_chunk.append(data)
+                    silent_duration = 0
+                    silent_warning_duration = 0
+                
+                record_duration += CHUNK / RATE
+
+                # Check if we need to warn if silence is long than warn time
+                check_silence_warning(silent_warning_duration)
+
+                # If the current_chunk has at least 5 seconds of audio and 1 second of silence at the end
+                if record_duration >= minimum_audio_duration and silent_duration >= minimum_silent_duration:
+                    if app_settings.editable_settings["Real Time"] and current_chunk:
+                        audio_queue.put(b''.join(current_chunk))
+                    current_chunk = []
+                    silent_duration = 0
+                    record_duration = 0
+
+        # Send any remaining audio chunk when recording stops
+        if current_chunk:
+            audio_queue.put(b''.join(current_chunk))
+    except Exception as e:
+        # Log the error message
+        # TODO System logger
+        # For now general catch on any problems
+        print(f"An error occurred: {e}")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        audio_queue.put(None)
+
+        # If the warning bar is displayed, remove it
+        if window.warning_bar is not None:
+            window.destroy_warning_bar()
+
+def check_silence_warning(silence_duration):
+    """Check if silence warning should be displayed."""
+
+    # Check if we need to warn if silence is long than warn time
+    if silence_duration >= SILENCE_WARNING_LENGTH and window.warning_bar is None:
+        
+        window.create_warning_bar(f"No audio input detected for {SILENCE_WARNING_LENGTH} seconds. Please check your microphone input device in whisper settings and adjust your microphone cutoff level in advanced settings.")
+    elif silence_duration <= SILENCE_WARNING_LENGTH and window.warning_bar is not None:
+        # If the warning bar is displayed, remove it
+        window.destroy_warning_bar()
 
 def is_silent(data, threshold=0.01):
     """Check if audio chunk is silent"""
@@ -212,14 +274,7 @@ def realtime_text():
     local_cancel_flag = False 
     if not is_realtimeactive:
         is_realtimeactive = True
-        model = None
-        if app_settings.editable_settings["Real Time"]:
-            try:
-                model_name = app_settings.editable_settings["Whisper Model"].strip()
-                model = whisper.load_model(model_name)
-            except Exception as e:
-                messagebox.showerror("Model Error", f"Error loading model: {e}")
-                
+
         while True:
             #  break if canceled
             if is_audio_processing_realtime_canceled.is_set():
@@ -233,9 +288,13 @@ def realtime_text():
                 print("Real Time Audio to Text")
                 audio_buffer = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768
                 if not is_silent(audio_buffer):
-                    if app_settings.editable_settings["Local Whisper"] == True:
+                    if app_settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] == True:
                         print("Local Real Time Whisper")
-                        result = model.transcribe(audio_buffer, fp16=False)
+                        if stt_local_model is None:
+                            update_gui("Local Whisper model not loaded. Please check your settings.")
+                            break
+
+                        result = stt_local_model.transcribe(audio_buffer, fp16=False)
                         if not local_cancel_flag and not is_audio_processing_realtime_canceled.is_set():
                             update_gui(result['text'])
                     else:
@@ -252,12 +311,12 @@ def realtime_text():
                             files = {'audio': f}
 
                             headers = {
-                                "Authorization": "Bearer "+app_settings.editable_settings["Whisper Server API Key"]
+                                "Authorization": "Bearer "+app_settings.editable_settings[SettingsKeys.WHISPER_SERVER_API_KEY.value]
                             }
 
                             try:
                                 verify = not app_settings.editable_settings["S2T Server Self-Signed Certificates"]
-                                response = requests.post(app_settings.editable_settings["Whisper Endpoint"], headers=headers,files=files, verify=verify)
+                                response = requests.post(app_settings.editable_settings[SettingsKeys.WHISPER_ENDPOINT.value], headers=headers,files=files, verify=verify)
                                 if response.status_code == 200:
                                     text = response.json()['text']
                                     if not local_cancel_flag and not is_audio_processing_realtime_canceled.is_set():
@@ -289,10 +348,10 @@ def save_audio():
             wf.writeframes(b''.join(frames))
         frames = []  # Clear recorded data
 
-        if app_settings.editable_settings["Real Time"] == True and is_audio_processing_realtime_canceled.is_set() is False:
-            send_and_receive()
-        elif app_settings.editable_settings["Real Time"] == False and is_audio_processing_whole_canceled.is_set() is False:
-            threaded_send_audio_to_server()
+    if app_settings.editable_settings["Real Time"] == True and is_audio_processing_realtime_canceled.is_set() is False:
+        send_and_receive()
+    elif app_settings.editable_settings["Real Time"] == False and is_audio_processing_whole_canceled.is_set() is False:
+        threaded_send_audio_to_server()
 
 def toggle_recording():
     global is_recording, recording_thread, DEFAULT_BUTTON_COLOUR, audio_queue, current_view, REALTIME_TRANSCRIBE_THREAD_ID
@@ -302,9 +361,13 @@ def toggle_recording():
         is_audio_processing_realtime_canceled.clear()
         is_audio_processing_whole_canceled.clear()
 
+    if is_paused:
+        toggle_pause()
+
     realtime_thread = threaded_realtime_text()
 
     if not is_recording:
+        disable_recording_ui_elements()
         REALTIME_TRANSCRIBE_THREAD_ID = realtime_thread.ident
         user_input.scrolled_text.configure(state='normal')
         user_input.scrolled_text.delete("1.0", tk.END)
@@ -327,6 +390,7 @@ def toggle_recording():
         
         start_flashing()
     else:
+        enable_recording_ui_elements()
         is_recording = False
         if recording_thread.is_alive():
             recording_thread.join()  # Ensure the recording thread is terminated
@@ -375,6 +439,26 @@ def toggle_recording():
             mic_button.config(bg=DEFAULT_BUTTON_COLOUR, highlightbackground=DEFAULT_BUTTON_COLOUR, text="Start\nRecording")
         elif current_view == "minimal":
             mic_button.config(bg=DEFAULT_BUTTON_COLOUR, highlightbackground=DEFAULT_BUTTON_COLOUR, text="🎤")
+
+def disable_recording_ui_elements():
+    window.disable_settings_menu()
+    user_input.scrolled_text.configure(state='disabled')
+    send_button.config(state='disabled')
+    toggle_button.config(state='disabled')
+    upload_button.config(state='disabled')
+    response_display.scrolled_text.configure(state='disabled')
+    timestamp_listbox.config(state='disabled')
+    clear_button.config(state='disabled')
+
+def enable_recording_ui_elements():
+    window.enable_settings_menu()
+    user_input.scrolled_text.configure(state='normal')
+    send_button.config(state='normal')
+    toggle_button.config(state='normal')
+    upload_button.config(state='normal')
+    timestamp_listbox.config(state='normal')
+    clear_button.config(state='normal')
+    
 
 def cancel_processing():
     """Cancels any ongoing audio processing.
@@ -480,7 +564,7 @@ def send_audio_to_server():
     Raises:
     -------
     ValueError
-        If the `app_settings.editable_settings["Local Whisper"]` flag is not a boolean.
+        If the `app_settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value]` flag is not a boolean.
     FileNotFoundError
         If the specified audio file does not exist.
     requests.exceptions.RequestException
@@ -506,10 +590,10 @@ def send_audio_to_server():
 
     loading_window = LoadingWindow(root, "Processing Audio", "Processing Audio. Please wait.", on_cancel=lambda: (cancel_processing(), cancel_whole_audio_process(current_thread_id)))
 
-    # Check if Local Whisper is enabled in the editable settings
-    if app_settings.editable_settings["Local Whisper"] == True:
-        # Inform the user that Local Whisper is being used for transcription
-        print("Using Local Whisper for transcription.")
+    # Check if SettingsKeys.LOCAL_WHISPER is enabled in the editable settings
+    if app_settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value] == True:
+        # Inform the user that SettingsKeys.LOCAL_WHISPER.value is being used for transcription
+        print(f"Using {SettingsKeys.LOCAL_WHISPER.value} for transcription.")
         # Configure the user input widget to be editable and clear its content
         user_input.scrolled_text.configure(state='normal')
         user_input.scrolled_text.delete("1.0", tk.END)
@@ -529,7 +613,7 @@ def send_audio_to_server():
             uploaded_file_path = None
 
             # Transcribe the audio file using the loaded model
-            result = model.transcribe(file_to_send)
+            result = stt_local_model.transcribe(file_to_send)
             transcribed_text = result["text"]
 
             # done with file clean up
@@ -569,6 +653,8 @@ def send_audio_to_server():
         # Display a message indicating that audio to text processing is in progress
         user_input.scrolled_text.insert(tk.END, "Audio to Text Processing...Please Wait")
 
+        delete_file = False if uploaded_file_path else True
+
         # Determine the file to send for transcription
         if uploaded_file_path:
             file_to_send = uploaded_file_path
@@ -582,14 +668,14 @@ def send_audio_to_server():
 
             # Add the Bearer token to the headers for authentication
             headers = {
-                "Authorization": f"Bearer {app_settings.editable_settings['Whisper Server API Key']}"
+                "Authorization": f"Bearer {app_settings.editable_settings[SettingsKeys.WHISPER_SERVER_API_KEY.value]}"
             }
 
             try:
                 verify = not app_settings.editable_settings["S2T Server Self-Signed Certificates"]
 
                 # Send the request without verifying the SSL certificate
-                response = requests.post(app_settings.editable_settings["Whisper Endpoint"], headers=headers, files=files, verify=verify)
+                response = requests.post(app_settings.editable_settings[SettingsKeys.WHISPER_ENDPOINT.value], headers=headers, files=files, verify=verify)
 
                 response.raise_for_status()
 
@@ -615,7 +701,7 @@ def send_audio_to_server():
             finally:
                 # done with file clean up
                 f.close()
-                if os.path.exists(file_to_send):
+                if os.path.exists(file_to_send) and delete_file:
                     os.remove(file_to_send)
                 loading_window.destroy()
 
@@ -754,25 +840,34 @@ def send_text_to_api(edited_text):
         if app_settings.editable_settings["Model Endpoint"].endswith('/'):
             app_settings.editable_settings["Model Endpoint"] = app_settings.editable_settings["Model Endpoint"][:-1]
 
-        if app_settings.API_STYLE == "OpenAI":
-            verify = not app_settings.editable_settings["AI Server Self-Signed Certificates"]
-            response = requests.post(app_settings.editable_settings["Model Endpoint"]+"/chat/completions", headers=headers, json=payload, verify=verify)
+        # Open API Style
+        verify = not app_settings.editable_settings["AI Server Self-Signed Certificates"]
+        response = requests.post(app_settings.editable_settings["Model Endpoint"]+"/chat/completions", headers=headers, json=payload, verify=verify)
 
-            response.raise_for_status()
-            response_data = response.json()
-            response_text = (response_data['choices'][0]['message']['content'])
-            return response_text
-        elif app_settings.API_STYLE == "KoboldCpp":
-            prompt = get_prompt(edited_text)
+        response.raise_for_status()
+        response_data = response.json()
+        response_text = (response_data['choices'][0]['message']['content'])
+        return response_text
 
-            verify = not app_settings.editable_settings["AI Server Self-Signed Certificates"]
-            response = requests.post(app_settings.editable_settings["Model Endpoint"] + "/api/v1/generate", json=prompt, verify=verify)
+        #############################################################
+        #                                                           #
+        #                   OpenAI API Style                        #
+        #           Uncomment to use API Style Selector             #
+        #                                                           #
+        #############################################################
+        
+        # if app_settings.API_STYLE == "OpenAI":                    
+        # elif app_settings.API_STYLE == "KoboldCpp":
+        #     prompt = get_prompt(edited_text)
 
-            if response.status_code == 200:
-                results = response.json()['results']
-                response_text = results[0]['text']
-                response_text = response_text.replace("  ", " ").strip()
-                return response_text
+        #     verify = not app_settings.editable_settings["AI Server Self-Signed Certificates"]
+        #     response = requests.post(app_settings.editable_settings["Model Endpoint"] + "/api/v1/generate", json=prompt, verify=verify)
+
+        #     if response.status_code == 200:
+        #         results = response.json()['results']
+        #         response_text = results[0]['text']
+        #         response_text = response_text.replace("  ", " ").strip()
+        #         return response_text
 
     except Exception as e:
         raise e
@@ -1003,6 +1098,8 @@ def set_full_view():
     switch_view_button.grid(row=1, column=7, pady=5, padx=0,sticky='nsew')
     blinking_circle_canvas.grid(row=1, column=8, padx=0,pady=5)
 
+    window.toggle_menu_bar(enable=True)
+
     # Reconfigure button styles and text
     mic_button.config(bg="red" if is_recording else DEFAULT_BUTTON_COLOUR,
                       text="Stop\nRecording" if is_recording else "Start\nRecording",
@@ -1032,7 +1129,8 @@ def set_full_view():
     if last_full_position is not None:
         root.geometry(last_full_position)
 
-    root.attributes('-toolwindow', False)
+    # Disable to make the window an app(show taskbar icon)
+    # root.attributes('-toolwindow', False)
 
 
 def set_minimal_view():
@@ -1079,6 +1177,8 @@ def set_minimal_view():
 
     blinking_circle_canvas.grid(row=0, column=3, pady=2, padx=2)
 
+    window.toggle_menu_bar(enable=False)
+
     # Update window properties for minimal view
     root.attributes('-topmost', True)
     root.minsize(125, 50)  # Smaller minimum size for minimal view
@@ -1107,7 +1207,8 @@ def set_minimal_view():
     if last_minimal_position:
         root.geometry(last_minimal_position)
 
-    root.attributes('-toolwindow', True)
+    # Enable to make the window a tool window (no taskbar icon)
+    # root.attributes('-toolwindow', True)
 
 def copy_text(widget):
     text = widget.get("1.0", tk.END)
@@ -1122,6 +1223,29 @@ def remove_placeholder(event, text_widget, placeholder_text="Text box"):
     if text_widget.get("1.0", "end-1c") == placeholder_text:
         text_widget.delete("1.0", "end")
         text_widget.config(fg='black')
+
+def load_stt_model(event=None):
+    thread = threading.Thread(target=_load_stt_model_thread, daemon=True)
+    thread.start()
+
+def _load_stt_model_thread():
+    global stt_local_model
+    model = app_settings.editable_settings["Whisper Model"].strip()
+    # Create a loading window to display the loading message
+    stt_loading_window = LoadingWindow(root, "Speech to Text", "Loading Speech to Text. Please wait.")
+    print(f"Loading STT model: {model}")
+    try:
+        # Load the specified Whisper model
+        stt_local_model = whisper.load_model(model)
+        print("STT model loaded successfully.")
+    except Exception as e:
+        # Log the error message
+        print(f"An error occurred while loading STT: {e}")
+        stt_local_model = None
+        messagebox.showerror("Error", f"An error occurred while loading the STT model: {e}")
+    finally:
+        stt_loading_window.destroy()
+        print("Closing STT loading window.")
 
 
 # Configure grid weights for scalability
@@ -1217,21 +1341,13 @@ root.minsize(900, 400)
 if app_settings.editable_settings["Use Local LLM"]:
     root.after(100, lambda:(ModelManager.setup_model(app_settings=app_settings, root=root)))  
 
+if app_settings.editable_settings[SettingsKeys.LOCAL_WHISPER.value]:
+    # Inform the user that Local Whisper is being used for transcription
+    print("Using Local Whisper for transcription.")
+    root.after(100, lambda: (load_stt_model()))
+
+root.bind("<<LoadSttModel>>", load_stt_model)
+
 root.mainloop()
 
 p.terminate()
-
-def on_exit():
-    # Create a pop up that says yes or no with tkinter messagebox to option to close the docker containers
-
-    global window
-
-    main_window = window.logic
-
-    if main_window.container_manager is not None and app_settings.editable_settings["Auto Shutdown Containers on Exit"] is True:
-        main_window.container_manager.stop_container(app_settings.editable_settings["LLM Container Name"])
-        main_window.container_manager.stop_container(app_settings.editable_settings["LLM Caddy Container Name"])
-        main_window.container_manager.stop_container(app_settings.editable_settings["Whisper Container Name"])
-        main_window.container_manager.stop_container(app_settings.editable_settings["Whisper Caddy Container Name"])
-
-atexit.register(on_exit)
