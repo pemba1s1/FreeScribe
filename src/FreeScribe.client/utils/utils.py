@@ -1,6 +1,10 @@
 
 import ctypes
+import os
 import sys
+from filelock import FileLock
+
+LOCK_FILE_PATH = "/tmp/myapp.lock" if sys.platform == "darwin" else "C:\\Temp\\myapp.lock"
 
 # Define the mutex name and error code
 MUTEX_NAME = 'Global\\FreeScribe_Instance'
@@ -8,6 +12,21 @@ ERROR_ALREADY_EXISTS = 183
 
 # Global variable to store the mutex handle
 mutex = None
+
+lock = None
+
+def _lock_file():
+    global lock
+    lock = FileLock(LOCK_FILE_PATH)
+    print("Acquiring lock...")
+    try :
+        lock.acquire(timeout=1)
+        print("Lock acquired.")
+    except:
+        print("Another instance is already running.")
+        bring_to_front("AI Medical Scribe")
+        sys.exit(1)
+
 
 # function to check if another instance of the application is already running
 def window_has_running_instance() -> bool:
@@ -23,7 +42,7 @@ def window_has_running_instance() -> bool:
         mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
         return ctypes.windll.kernel32.GetLastError() == ERROR_ALREADY_EXISTS
     elif sys.platform == 'darwin':
-        # TODO - Implement for macOS
+        _lock_file()
         pass
 
 def bring_to_front(app_name: str):
@@ -40,16 +59,26 @@ def bring_to_front(app_name: str):
         U32DLL.ShowWindow(hwnd, SW_SHOW)
         U32DLL.SetForegroundWindow(hwnd)
     elif sys.platform == 'darwin':
-        # TODO - Implement for macOS
-        pass
+        os.system('osascript -e \'tell application'+ app_name +' to activate\'')
 
 def close_mutex():
     """
     Close the mutex handle to release the resource.
     """
+    global mutex
+    if mutex:
+        ctypes.windll.kernel32.ReleaseMutex(mutex)
+        ctypes.windll.kernel32.CloseHandle(mutex)
+        mutex = None
+
+def on_exit():
+    """
+    Function to be called when the application exits.
+    """
+    # This function will be called when the application closes
     if sys.platform == 'win32':
-        global mutex
-        if mutex:
-            ctypes.windll.kernel32.ReleaseMutex(mutex)
-            ctypes.windll.kernel32.CloseHandle(mutex)
-            mutex = None
+        close_mutex()
+    elif sys.platform == 'darwin':
+        if os.path.exists(LOCK_FILE_PATH):
+            os.remove(LOCK_FILE_PATH)
+        print("Lock file removed.")

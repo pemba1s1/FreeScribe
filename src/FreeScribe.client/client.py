@@ -45,7 +45,7 @@ import ctypes
 import sys
 from UI.DebugWindow import DualOutput
 import sys
-from utils.utils import window_has_running_instance, bring_to_front, close_mutex
+from utils.utils import window_has_running_instance, bring_to_front, on_exit
 
 dual = DualOutput()
 sys.stdout = dual
@@ -64,7 +64,7 @@ else:
     sys.exit(0)
 
 # Register the close_mutex function to be called on exit
-atexit.register(close_mutex)
+atexit.register(on_exit)
 
 # settings logic
 app_settings = SettingsWindow()
