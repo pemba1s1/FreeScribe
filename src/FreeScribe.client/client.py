@@ -55,9 +55,6 @@ if sys.platform == "darwin":
     if getattr(sys, 'frozen', False):  # Check if running as a bundled app in macOS
         os.environ["PATH"] = os.path.join(sys._MEIPASS, 'ffmpeg')+ os.pathsep + os.environ["PATH"]
 
-# GUI Setup
-root = tk.Tk()
-root.title("AI Medical Scribe")
 dual = DualOutput()
 sys.stdout = dual
 sys.stderr = dual
