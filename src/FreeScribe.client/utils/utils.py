@@ -22,7 +22,8 @@ def _lock_file():
     try :
         lock.acquire(timeout=1)
         print("Lock acquired.")
-    except:
+    except Exception as e:
+        print(f"Error accessing lock file: {e}")
         print("Another instance is already running.")
         bring_to_front("AI Medical Scribe")
         sys.exit(1)
@@ -43,7 +44,6 @@ def window_has_running_instance() -> bool:
         return ctypes.windll.kernel32.GetLastError() == ERROR_ALREADY_EXISTS
     elif sys.platform == 'darwin':
         _lock_file()
-        pass
 
 def bring_to_front(app_name: str):
     """
