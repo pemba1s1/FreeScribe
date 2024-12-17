@@ -15,6 +15,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import scrolledtext, ttk, filedialog
+import certifi
 import requests
 import pyperclip
 import wave
@@ -42,6 +43,13 @@ from Model import  ModelManager
 from utils.ip_utils import is_private_ip
 from utils.file_utils import get_resource_path
 import ctypes
+
+if sys.platform == "darwin":
+    abspath_to_certifi_cafile = os.path.abspath(certifi.where())
+    os.environ['SSL_CERT_FILE'] = abspath_to_certifi_cafile
+    os.environ['REQUESTS_CA_BUNDLE'] = abspath_to_certifi_cafile
+    if getattr(sys, 'frozen', False):  # Check if running as a bundled app in macOS
+        os.environ["PATH"] = os.path.join(sys._MEIPASS, 'ffmpeg')+ os.pathsep + os.environ["PATH"]
 
 # GUI Setup
 root = tk.Tk()
@@ -517,8 +525,6 @@ def send_audio_to_server():
         # Display a message indicating that audio to text processing is in progress
         user_input.scrolled_text.insert(tk.END, "Audio to Text Processing...Please Wait")
         try:
-            if getattr(sys, 'frozen', False) and sys.platform == 'darwin':  # Check if running as a bundled app in macOS
-                os.environ["PATH"] = os.path.join(sys._MEIPASS, 'ffmpeg') + os.pathsep + os.environ["PATH"]
             # Load the specified Whisper model
             model_name = app_settings.editable_settings["Whisper Model"].strip()
             model = whisper.load_model(model_name)
