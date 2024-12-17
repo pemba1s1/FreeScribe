@@ -5,12 +5,11 @@ import subprocess
 
 # Determine the path to ffmpeg
 ffmpeg_path = subprocess.check_output(['which', 'ffmpeg']).decode().strip()
-portaudio_path = subprocess.check_output(['brew', '--prefix', 'portaudio']).decode().strip()
 
 a = Analysis(
     ['src/FreeScribe.client/client.py'],
     pathex=[],
-    binaries=[(ffmpeg_path, 'ffmpeg'), (os.path.join(portaudio_path, 'lib', 'libportaudio.dylib'), 'libportaudio.dylib')],
+    binaries=[(ffmpeg_path, 'ffmpeg')],
     datas=[('./src/FreeScribe.client/whisper-assets', 'whisper/assets'), ('./src/FreeScribe.client/markdown', 'markdown'), ('./src/FreeScribe.client/assets', 'assets')],
     hiddenimports=[],
     hookspath=['./scripts/hooks'],
