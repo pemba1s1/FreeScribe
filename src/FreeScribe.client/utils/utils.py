@@ -59,7 +59,13 @@ def bring_to_front(app_name: str):
         U32DLL.ShowWindow(hwnd, SW_SHOW)
         U32DLL.SetForegroundWindow(hwnd)
     elif sys.platform == 'darwin':
-        os.system('osascript -e \'tell application'+ app_name +' to activate\'')
+        from AppKit import NSApplication, NSApp
+        app = NSApplication.sharedApplication()
+        app.activateIgnoringOtherApps_(True)
+        for window in app.windows():
+            if window.title() == app_name:
+                window.makeKeyAndOrderFront_(None)
+                break
 
 def close_mutex():
     """
