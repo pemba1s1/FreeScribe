@@ -45,7 +45,7 @@ import ctypes
 import sys
 from UI.DebugWindow import DualOutput
 import sys
-from utils.utils import window_has_running_instance, bring_to_front, on_exit
+from utils.utils import window_has_running_instance, bring_to_front, close_mutex
 import gc
 from pathlib import Path
 
@@ -70,7 +70,7 @@ else:
     sys.exit(0)
 
 # Register the close_mutex function to be called on exit
-atexit.register(on_exit)
+atexit.register(close_mutex)
 
 # settings logic
 app_settings = SettingsWindow()
@@ -612,10 +612,7 @@ def send_audio_to_server():
         try:
             if getattr(sys, 'frozen', False) and sys.platform == 'darwin':  # Check if running as a bundled app in macOS
                 os.environ["PATH"] = os.path.join(sys._MEIPASS, 'ffmpeg') + os.pathsep + os.environ["PATH"]
-            # Load the specified Whisper model
-            model_name = app_settings.editable_settings["Whisper Model"].strip()
-            model = whisper.load_model(model_name)
-
+                
             # Determine the file to send for transcription
             file_to_send = uploaded_file_path or get_resource_path('recording.wav')
             delete_file = False if uploaded_file_path else True
