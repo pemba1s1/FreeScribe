@@ -9,18 +9,18 @@ https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/I
     <options customize="never"/>
     <script>
         <![CDATA[
-            function test() {
-                if(system.sysctl("hw.machine").includes("arm64")) {
-                    return true;
+            function checkRequirements() {
+                if(system.sysctl("hw.machine").includes("x86_64")) {
+                    my.result.title = system.localizedString('Wrong Architecture');
+                    my.result.message = system.localizedString('This software(arm64) is not supported on this architecture(x86_64).');
+                    my.result.type = 'Fatal';
+                    return false;
                 }
-                my.result.title = system.localizedString('Wrong Architecture');
-                my.result.message = system.localizedString('This software(arm64) is not supported on this architecture(x86_64).');
-                my.result.type = 'Fatal';
-                return false;
+                return true;
             }
         ]]>
     </script>
-    <installation-check script="test();"/>
+    <installation-check script="checkRequirements();"/>
     <choices-outline>
         <line choice="install"/>
     </choices-outline>
