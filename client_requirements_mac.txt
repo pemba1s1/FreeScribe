@@ -1,4 +1,4 @@
---index-url https://abetlen.github.io/llama-cpp-python/whl/cu121 --extra-index-url https://pypi.org/simple
+--index-url https://abetlen.github.io/llama-cpp-python/whl/cpu --extra-index-url https://pypi.org/simple
 altgraph==0.17.4
 annotated-types==0.7.0
 anyio==4.6.0
@@ -64,7 +64,4 @@ markdown==3.7
 tkhtmlview==0.3.1 
 llama-cpp-python==v0.2.90
 faster-whisper==1.1.0
-nvidia-cudnn-cu12==9.5.0.50
-nvidia-cuda-runtime-cu12==12.4.127
-nvidia-cuda-nvrtc-cu12==12.4.127
-nvidia-cublas-cu12==12.4.5.8
+pyobjc==10.3.2

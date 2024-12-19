@@ -101,7 +101,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install -r client_requirements.txt
+          pip install -r client_requirements_mac.txt
       
       - name: Uninstall CUDA-enabled llama_cpp (if necessary) and install CPU-only llama_cpp
         run: |
@@ -149,7 +149,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install -r client_requirements.txt
+          pip install -r client_requirements_mac.txt
 
       # - name: Uninstall CUDA-enabled llama_cpp (if necessary) and install CPU-only llama_cpp
       #   run: |
