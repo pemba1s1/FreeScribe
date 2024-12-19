@@ -118,7 +118,7 @@ jobs:
       
       - name: Build PKG installer
         run: |
-          ./build-pkg.sh
+          ./build-pkg.sh --arch x86_64
 
       - name: Rename Installer
         run: |
@@ -166,7 +166,7 @@ jobs:
       
       - name: Build PKG installer
         run: |
-          ./build-pkg.sh
+          ./build-pkg.sh --arch arm64
 
       - name: Rename Installer
         run: |
