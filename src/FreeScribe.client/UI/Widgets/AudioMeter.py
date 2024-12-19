@@ -14,6 +14,7 @@ and Research Students - Software Developer Alex Simko, Pemba Sherpa (F24), and N
 """
 
 import struct
+import threading
 import tkinter as tk
 from tkinter import ttk
 import pyaudio
@@ -57,6 +58,7 @@ class AudioMeter(tk.Frame):
         self.running = False
         self.threshold = threshold
         self.destroyed = False  # Add flag to track widget destruction
+        self.stop_monitoring = threading.Event()
         self.error_message_box = None  # Add error message box attribute
         self.setup_audio()
         self.create_widgets()
@@ -78,18 +80,19 @@ class AudioMeter(tk.Frame):
             return
 
         self.destroyed = True
-        self.running = False
+        self.stop_monitoring.set()
+
+        # Stop monitoring thread first
+        if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
+            print("Waiting for monitoring thread to join...")
+            self.monitoring_thread.join(timeout=1.0)
         
-        # Stop audio first
+        # Then stop audio stream and terminate PyAudio
         if hasattr(self, 'stream') and self.stream:
             self.stream.stop_stream()
             self.stream.close()
         if hasattr(self, 'p') and self.p:
             self.p.terminate()
-            
-        # Then wait for thread
-        if hasattr(self, 'monitoring_thread') and self.monitoring_thread:
-            self.monitoring_thread.join(timeout=1.0)
 
         # Cancel error message if scheduled
         if self.error_message_box is not None:
@@ -232,7 +235,7 @@ class AudioMeter(tk.Frame):
         This method reads audio data from the stream, calculates the maximum
         audio level, and updates the meter display on the main thread.
         """
-        while self.running and not self.destroyed:  # Check destroyed flag
+        while not self.stop_monitoring.is_set():  # Check destroyed flag
             try:
                 data = self.stream.read(self.CHUNK, exception_on_overflow=False)
                 audio_data = struct.unpack(f'{self.CHUNK}h', data)
@@ -243,8 +246,12 @@ class AudioMeter(tk.Frame):
                 if not self.destroyed:
                     self.master.after(0, self.update_meter_display, level)
             except Exception as e:
+                self.running = False
                 print(f"Error in audio monitoring: {e}")
                 break
+        
+        self.running = False
+        print("Audio monitoring thread stopped.")
     
     def update_meter_display(self, level):
         """

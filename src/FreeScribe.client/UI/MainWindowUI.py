@@ -5,6 +5,7 @@ from UI.SettingsWindow import FeatureToggle
 from UI.SettingsWindowUI import SettingsWindowUI
 from UI.MarkdownWindow import MarkdownWindow
 from utils.file_utils import get_file_path
+from utils.icon_utils import set_logo
 from UI.DebugWindow import DebugPrintWindow
 
 DOCKER_CONTAINER_CHECK_INTERVAL = 10000  # Interval in milliseconds to check the Docker container status
@@ -33,7 +34,7 @@ class MainWindowUI:
         self.logic = mw.MainWindow(self.app_settings)  # Logic to control the container behavior
         self.scribe_template = None
         self.setting_window = SettingsWindowUI(self.app_settings, self, self.root)  # Settings window
-        self.root.iconbitmap(get_file_path('assets','logo.ico'))
+        set_logo(self.root)
         self.debug_window_open = False  # Flag to indicate if the debug window is open
 
         self.warning_bar = None # Warning bar
